@@ -21,33 +21,35 @@ package net.iubris.mirror;
 
 import java.lang.reflect.Method;
 
-public class ExceptionHandler {
+public class ExceptionDispatcher {
 
-	public static Method findBestMatchException(Exception throwable, OnExceptionProvided self) {
-    	Class<?> handlerClass = self.getClass();
-    	Class<?> founderClass = OnExceptionProvided.class;
+//	public static Method findBestMatchException(Exception throwable, OnExceptionProvided self) {
+	public static Method findBestMatchException(Exception throwable, Object self, String methodName) {
+//		Class<?> selfClass = self.getClass();
+		Class<?> handlerClass = self.getClass();
+//    	Class<?> founderClass = Object.class;
 	    Class<?> throwableClass = throwable.getClass();
+//	    String methodName = "onException";
 //System.out.println("throwable is: "+throwableClass.getSimpleName());
 	    do {
 	    	try {
 //System.out.println("trying on: "+handlerClass.getName());
-	    		Method method = handlerClass.getDeclaredMethod("onException", throwableClass);
+	    		Method method = handlerClass.getDeclaredMethod(methodName, throwableClass);
 //System.out.println("found: "+method+" !");
 	    		return method;
 	    	} catch (NoSuchMethodException e) {
 	    		handlerClass = handlerClass.getSuperclass();
-//System.out.println("nothing found, trying on superclass: "+handlerClass.getSimpleName()); 	    		
-    			if (handlerClass == founderClass) {
-					try {
-						Method method = founderClass.getDeclaredMethod("onException", Exception.class);
-//System.out.println("sorry, calling: "+selfClass.getSimpleName()+".onException(Exception e)");
-//System.out.println("sorry, calling: "+method.getName()+"(Exception e)");
+//System.out.println("nothing found, trying on superclass: "+handlerClass.getSimpleName());
+    			if (handlerClass == Object.class) {
+//					try {
+//						Method method = selfClass.getDeclaredMethod(methodName, Exception.class);
+						Method method = ExceptionDispatcher.findBestMatchException(new Exception(), self, methodName);
+//System.out.println("sorry, returning: "+selfClass.getSimpleName()+" "+method.getName());
 						return method;
-					} catch (NoSuchMethodException e1) {
-    	    			// this should never happen because onException(Exception) must be present for an instance
-    	    			// of ExceptionHandler	    				
-    	    			throw new UnknownError("Expected method onException("+throwable.getClass()+") not found");
-					}
+					/*} catch (NoSuchMethodException e1) {
+    	    			// this should never happen because "methodName"(Exception) must be present on founder class
+    	    			throw new UnknownError("Expected method "+methodName+"("+Exception.class+") not found in "+selfClass.getSimpleName());
+					}*/
 	    		}
 	    	}
 	    } while (true);
